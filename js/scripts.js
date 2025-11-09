@@ -1,9 +1,13 @@
 // Elementos
 const notesContainer = document.querySelector(".notes-container");
 
-const notesInput = document.querySelector("#note-content");
+const noteInput = document.querySelector("#note-content");
 
 const addNoteBtn = document.querySelector(".add-note");
+
+const searchInput = document.querySelector("#search-input");
+
+const exportBtn = document.querySelector("#exports-notes");
 
 // Funçoes
 const showNotes = () => {
@@ -23,7 +27,7 @@ const addNote = () => {
 
   const noteObject = {
     id: generateId(),
-    content: notesInput.value,
+    content: noteInput.value,
     fixed: false,
   };
 
@@ -35,7 +39,7 @@ const addNote = () => {
 
   saveNotes(notes);
 
-  notesInput.value = "";
+  noteInput.value = "";
 };
 
 const generateId = () => {
@@ -159,10 +163,64 @@ const saveNotes = (notes) => {
   localStorage.setItem("notes", JSON.stringify(notes));
 };
 
+const searchNotes = (search) => {
+  const searchResult = getNotes().filter((note) => {
+    return note.content.includes(search);
+  });
+
+  if (search !== "") {
+    cleanNotes();
+
+    searchResult.forEach((note) => {
+      const noteElement = createNote(note.id, note.content);
+      notesContainer.appendChild(noteElement);
+    });
+
+    return;
+  }
+
+  cleanNotes();
+  showNotes();
+};
+
+const exportData = () => {
+  const notes = getNotes();
+
+  const csvString = [
+    ["ID", "Conteudo", "Fixado"],
+    ...notes.map((note) => [note.id, note.content, note.fixed]),
+  ]
+    .map((e) => e.join(","))
+    .join("\n");
+
+  const element = document.createElement("a");
+  element.href = "data:text/csv;charset=utf-8," + encodeURI(csvString);
+
+  element.target = "_blank";
+
+  element.download = "notes.csv";
+  element.click();
+};
+
 // Eventos
 addNoteBtn.addEventListener("click", () => {
   addNote();
 });
 
+searchInput.addEventListener("keyup", (e) => {
+  const search = e.target.value;
+
+  searchNotes(search);
+});
+
+noteInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    addNote();
+  }
+});
+
+exportBtn.addEventListener("click", () => {
+  exportData();
+});
 // Inicializaçao
 showNotes();
